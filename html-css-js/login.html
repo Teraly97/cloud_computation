@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/bootstrap.min.css" rel='stylesheet' type='text/css' />
+<link href="css/style.css" rel='stylesheet' type='text/css' />
+<link href="css/font-awesome.css" rel="stylesheet">
+
+<script src="js/amazon-cognito-identity.min.js"></script>
+<script src="js/aws-sdk-2.918.0.min.js"></script>	
+
+</head>
+<body id="login">
+	<div class="login-logo">
+	</div>
+	<h2 class="form-heading">login</h2>
+	<div class="app-cam">
+		<form>
+			<input type="text" class="text" id="email" placeholder="email" required>
+			<input type="password" id="password" placeholder="password" required minlength="6">
+			<div id="display_line_left">
+			<div class="submit"><input type="button" id="log" value="Login"></div>
+			</div>
+			<ul class="new">
+				<li class="new_right"><p class="sign">New here ?<a href="register.html"> Sign Up</a></p></li>
+				<div class="clearfix"></div>
+			</ul>
+		</form>
+	</div>
+	
+</body>
+</html>
+<script type="text/javascript">
+	sessionStorage.clear();
+	var btn = document.getElementById("log");
+	btn.onclick = function (){
+		console.log();
+        var authenticationData = {
+            Username: document.getElementById("email").value,
+            Password: document.getElementById("password").value,
+        };
+        console.log(document.getElementById("email").value);
+        var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+
+        poolData = {
+            UserPoolId:"us-east-1_yioJ69boI",
+            ClientId:"732nhpn97558tmto9uhmco6sop"
+        };
+
+        var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+        var userData = {
+            Username: document.getElementById("email").value,
+            Pool: userPool,
+        };
+
+        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+        cognitoUser.authenticateUser(authenticationDetails, {
+            onSuccess: function(result) {
+				sessionStorage.setItem('email',document.getElementById("email").value);
+                var accessToken = result.getAccessToken().getJwtToken();
+                var idToken = result.idToken.jwtToken;
+                console.log("Access token: " + accessToken);
+                console.log("ID token: " + idToken);
+				sessionStorage.setItem('id_token',idToken);
+                // Unnecessary
+                window.location.href= "search.html";
+            },
+
+            onFailure: function(err){
+                alert(err.message || JSON.stringify(err));
+            },
+        });
+
+    }
+</script>

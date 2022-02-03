@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Register</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+		<link href="css/bootstrap.min.css" rel='stylesheet' type='text/css' />
+		<link href="css/style.css" rel='stylesheet' type='text/css' />
+		<link href="css/font-awesome.css" rel="stylesheet">
+		<script src="js/amazon-cognito-identity.min.js"></script>
+		<script src="js/aws-sdk-2.918.0.min.js"></script>
+		
+
+
+	</head>
+	<body id="login">
+		<div class="login-logo">
+		</div>
+		<h2 class="form-heading">Register</h2> 
+		<form class="form-signin app-cam" action="">
+			<p>Enter your personal details below</p>
+			<input type="text" class="form-control1" id="email" placeholder="Email" autofocus="">
+			<input type="text" class="form-control1" id="givenname" placeholder="GivenName" autofocus="" required>
+			<input type="text" class="form-control1" id="familyname" placeholder="FamilyName" autofocus="" required>
+			<input type="text" class="form-control1" id="password" placeholder="Password" autofocus="" required>
+			<div id="display_line_left">
+			<input type="text" class="form-control1" placeholder="code" autofocus="" required id="code">
+			</div>
+			<div id="display_line_right">
+			<button class="btn btn-lg btn-success1 btn-block" id="sub" type="button">verify</button>
+			</div>
+			<button class="btn btn-lg btn-success1 btn-block" id="reg" type="button">Submit</button>
+			<div class="registration">
+				Already Registered.
+				<a class="" href="login.html">
+					Login
+				</a>
+			</div>
+		</form>
+	</body>
+</html>
+
+<script type="text/javascript">
+	var btn = document.getElementById("sub");
+	var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider({
+		region: 'us-east-1'
+	});
+	//console.log(btn);
+	btn.onclick = function() {
+		console.log(document.getElementById("email").value);
+		var params = {
+			ClientId: '732nhpn97558tmto9uhmco6sop',
+			Password: document.getElementById("password").value,
+			Username: document.getElementById("email").value,
+			UserAttributes: [{
+				Name: 'email',
+				Value: document.getElementById("email").value,
+			}, {
+				Name: 'given_name',
+				Value: document.getElementById("givenname").value
+			}, {
+				Name: 'family_name',
+				Value: document.getElementById("familyname").value
+			}],
+			ValidationData: [{
+				Name: 'email',
+				Value: document.getElementById("email").value
+			}, {
+				Name: 'given_name',
+				Value: document.getElementById("givenname").value
+			}, {
+				Name: 'family_name',
+				Value: document.getElementById("familyname").value
+			}],
+		};
+
+		cognitoidentityserviceprovider.signUp(params, function(err, data) {
+			if (err) console.log(err, err.stack); // an error occurred
+			else console.log(data); // successful response 
+		});
+	}
+	var reg = document.getElementById("reg");
+	reg.onclick = function(){
+	var params = {
+		ClientId: '732nhpn97558tmto9uhmco6sop',
+		ConfirmationCode: document.getElementById("code").value,
+		 Username: document.getElementById("email").value
+	};
+	
+	cognitoidentityserviceprovider.confirmSignUp(params, function(err, data) {
+				if (err) console.log(err, err.stack); // an error occurred 
+				else {
+					console.log(data);
+					if (JSON.stringify(data) == "{}"){
+						AutoLogin();
+					}
+				}
+				});
+	}
+	function AutoLogin(){
+		var authenticationData = {
+            Username: document.getElementById("email").value,
+            Password: document.getElementById("password").value,
+        };
+        console.log(document.getElementById("email").value);
+		var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+
+        poolData = {
+            UserPoolId:"us-east-1_yioJ69boI",
+            ClientId:"732nhpn97558tmto9uhmco6sop"
+        };
+
+        var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+
+        var userData = {
+            Username: document.getElementById("email").value,
+            Pool: userPool,
+        };
+
+        var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+
+        cognitoUser.authenticateUser(authenticationDetails, {
+            onSuccess: function(result) {
+				sessionStorage.setItem('email',document.getElementById("email").value);
+                var accessToken = result.getAccessToken().getJwtToken();
+                var idToken = result.idToken.jwtToken;
+                console.log("Access token: " + accessToken);
+                console.log("ID token: " + idToken);
+				sessionStorage.setItem('id_token',idToken);
+                // Unnecessary
+                console.log("111");
+                window.location.href= "search.html";
+            },
+
+            onFailure: function(err){
+                alert(err.message || JSON.stringify(err));
+            },
+        });
+	}
+</script>

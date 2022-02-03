@@ -1,0 +1,295 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>search</title>
+
+		<link href="css/amazeui.css" rel="stylesheet" type="text/css" />
+		<link href="css/admin.css" rel="stylesheet" type="text/css" />
+		<link href="css/demo.css" rel="stylesheet" type="text/css" />
+		<link href="css/seastyle.css" rel="stylesheet" type="text/css" />
+		<link href="css/style.css" rel="stylesheet" type="text/css" />
+		<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			window.onload=function(){
+				var email = sessionStorage.getItem('email');
+				console.log(email);
+				var idToken = sessionStorage.getItem('id_token');
+				console.log(idToken);
+				if(idToken == null || idToken == ""){
+					location.href = "login.html";
+					return;
+				}
+				
+				var vue=new Vue({
+					el:"#div1",
+					data:{
+						images:[],
+						tags: "",
+						imagesUrls: "",
+						user_email: email
+					},
+					methods:{
+						//selectall
+						selectall(){
+							fetch('https://wp01jitbc2.execute-api.us-east-1.amazonaws.com/new/new',{
+								method: 'POST',
+								mode: 'cors',
+								body: JSON.stringify({}),
+								headers:{
+									"Authorization":idToken
+								}
+							})
+							.then(response => response.json())
+							.then((result)=>{
+								console.log(result);
+								this.images = result;
+								//console.log(images);
+							})
+							.catch(function (error) {
+								console.log(error);
+								//alert("error");
+							});
+						},
+						//deleteImage
+						deleteImage(image_link){
+							if(confirm("Do you really want to delete?")){
+								fetch('https://j8eg5hm106.execute-api.us-east-1.amazonaws.com/modifyImage/api/delete_image',{
+									method: 'POST',
+									mode: 'cors',
+									body: JSON.stringify({"image_link":image_link}),
+									headers:{
+										"Authorization":idToken
+									}
+								})
+								.then(response => response.json())
+								.then(result => {
+									console.log('Success: ', result);
+									alert("deleted");
+									this.selectall();
+								})
+								.catch(function (error) {
+									console.log(error);
+									alert("fail delete");
+								});
+							}
+						},
+						//selectBytagName
+						selectBytagName(tags){
+							alert(tags);
+							fetch('https://3mk3wssjy9.execute-api.us-east-1.amazonaws.com/searchImage/api/search_image/by_tags',{
+								method: 'POST',
+								mode: 'cors',
+								body: JSON.stringify({"tags": tags}),
+								headers:{
+									"Authorization":idToken
+								}
+							})
+							.then(response => response.json())
+							.then((result)=>{
+								console.log(result);
+								this.images = result;
+							})
+							.catch(function (error) {
+								console.log(error);
+								//alert("error");
+							});
+						},
+						
+						//addImage
+						addImage(){
+							//alert(document.getElementById("img1").src);
+							var imagesBase = document.getElementById("img1").src;
+							var imageName = document.getElementById("img1").name;
+							fetch('https://9y15u4qff9.execute-api.us-east-1.amazonaws.com/putBucket/bucket',{
+								method: 'POST',
+								mode: 'cors',
+								body: JSON.stringify({"file": imagesBase, "image_name": imageName}),
+								headers:{
+									"Authorization": idToken
+								}
+							})
+							.then(response => response.json())
+							.then((result)=>{
+								alert("image added successfully");
+								console.log(result);
+								//this.images = result;
+								//console.log(images);
+								this.selectall();
+							})
+							.catch(function (error) {
+								console.log(error);
+								alert("error");
+							});
+						},
+						//lookimage
+						lookImg(ele,imgId){
+							//show image
+							//gain the files from the input file;
+							var file = ele.target.files[0];
+							//readfile
+							var reader = new FileReader();
+							reader.readAsDataURL(file);
+							reader.onload=function(e){
+								console.log(e);
+								//base64 url
+								//alert(e.target.result);
+								document.getElementById(imgId).src = e.target.result;
+								//alert(file.name);
+								document.getElementById(imgId).name = file.name; 
+							}
+						},
+						//jumptodetail
+						jumpTodetail(image_link){ 
+							localStorage.setItem("image_link",image_link);
+							//var url = "detail.html?"  + "image_link=" + image_link;
+							location.href = "detail.html";
+						},
+						//searchbyimage
+						searchbyimage(){
+							//alert(document.getElementById("img1").src);
+							var imagesBase = document.getElementById("img1").src;
+							var imageName = document.getElementById("img1").name;
+							fetch('https://3mk3wssjy9.execute-api.us-east-1.amazonaws.com/searchImage/api/search_image/by_images',{
+								method: 'POST',
+								mode: 'cors',
+								body: JSON.stringify({"file": imagesBase, "image_name": imageName}),
+								headers:{
+									"Authorization": idToken
+								}
+							})
+							.then(response => response.json())
+							.then((result)=>{
+								console.log(result);
+								this.images = result;
+								//console.log(images);
+								//this.selectall();
+							})
+							.catch(function (error) {
+								console.log(error);
+								alert("error");
+							});
+						},
+						logOut(){
+							localStorage.clear();
+							sessionStorage.clear();
+							location.href = "login.html";
+						}
+						
+			 		},
+					mounted(){
+					  	//init
+						this.selectall();
+					}
+					
+				});
+				
+			}
+				
+		</script>
+		
+	</head>
+
+
+	<body>
+
+		<!--顶部导航条 -->
+		<div class="am-container header">
+			<ul class="message-l">
+				
+			</ul>
+			<ul class="message-r">
+				
+			</ul>
+			</div>
+
+			<!--悬浮搜索框-->
+
+			<div class="clear"></div>
+           <div class="search">
+					<div class="am-g am-g-fixed" id="div1">
+							
+						<div class="topMessage home">
+							<div class="menu-hd">
+								<a href="#" target="_top" class="h">{{user_email}}</a>
+								<button href="#" target="_top" class="log_out" @click="logOut()">log out</button>
+							</div>
+							
+						</div>
+
+						
+						<div class="nav white">
+						
+							<div class="search-bar pr">
+								<form>
+									<input id="searchInput" name="index_none_header_sysc" type="text" placeholder="searchBytags" autocomplete="off" v-model="tags">
+									<input id="ai-topsearch" class="submit am-btn"  value="search" index="1" type="button" @click="selectBytagName(tags)">
+								</form>
+							</div>
+						</div>
+						
+						<div class="am-u-sm-12 am-u-md-12">
+	                  	<div class="theme-popover">														
+							
+                        </div>
+							<div class="search-content">
+								<div class="clear"></div>
+
+								<ul class="am-avg-sm-2 am-avg-md-3 am-avg-lg-4 boxes">
+									
+									<li id="list" v-for= "image in images">
+										<div class="i-pic limit">
+											<a href="#" @click="jumpTodetail(image.image_link)">
+												<img :src="image.image_link"/>
+											</a>
+											<p class="title fl">
+											{{image.image_tags}}
+											</p>
+											<p class="number fl">
+												<a href="#" class="btn_delete" v-on:click="deleteImage(image.image_link)">delete</a>
+											</p>
+										</div>
+									</li>
+									
+								</ul>
+							</div>
+							<div class="search-side">
+								<li>
+									<div class="i-pic check">
+										<!-- <img height="200" id="img1" :src="`${}`" /> -->
+										<img height="200" id="img1" />
+									</div>
+								</li>
+								
+								<li>
+									<div class="i-pic check">
+										<input value="updateFile" index="1" type="file" ref="myfile" @change="lookImg($event,'img1')">
+									</div>
+								</li>
+								
+								<li>
+									<div class="i-pic check">
+										<a href="#"  class="btn_delete" @click="addImage()">AddImages</a>
+									</div>
+								</li>
+								
+								<li>
+									<div class="i-pic check">
+										<a href="#"  class="btn_delete" @click="searchbyimage()">searchByImage</a>
+									</div>
+								</li>
+
+							</div>
+							<div class="clear"></div>
+
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+	</body>
+
+</html>
